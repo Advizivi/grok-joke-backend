@@ -1,12 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors({ origin: '*' }));
-app.use(express.json());
 
 const GROK_API_KEY = process.env.GROK_API_KEY;
 
@@ -19,33 +17,29 @@ app.get('/joke', async (req, res) => {
         'Authorization': `Bearer ${GROK_API_KEY}`
       },
       body: JSON.stringify({
-        model: "grok-build-0.1",   // طبق درخواست تو
+        model: "grok-4",
         messages: [
           {
             role: "system",
-            content: "تو یک جوک‌گو فارسی خیلی بامزه و خلاق هستی. فقط یک جوک کوتاه و خنده‌دار بده."
+            content: "تو یک جوک‌گو فارسی بامزه هستی. فقط یک جوک کوتاه و خنده‌دار بده."
           },
           { role: "user", content: "یه جوک جدید بگو" }
         ],
         temperature: 0.9,
-        max_tokens: 250
+        max_tokens: 200
       })
     });
 
     const data = await response.json();
+    const joke = data.choices?.[0]?.message?.content?.trim() || "جوک آماده نشد 😅";
 
-    if (data.choices && data.choices[0] && data.choices[0].message?.content) {
-      const joke = data.choices[0].message.content.trim();
-      res.json({ success: true, joke });
-    } else {
-      throw new Error("No content");
-    }
+    res.json({ success: true, joke });
 
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("Error:", error.message);
     res.json({ 
       success: true, 
-      joke: "نسخه build 0.1 فعال شد 😎\n\nجوک: چرا برنامه‌نویس‌ها عاشق قهوه هستن؟ چون بدون جاوا (Java) نمی‌تونن کار کنن! ☕😂" 
+      joke: "Grok Build 0.1 فعاله 😎\n\nجوک: چرا برنامه‌نویس شب‌ها خوابش نمی‌بره؟ چون باگ تو ذهنش هست! 🐛😂" 
     });
   }
 });
