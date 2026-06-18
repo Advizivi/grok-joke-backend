@@ -6,44 +6,27 @@ const PORT = process.env.PORT || 8080;
 
 app.use(cors({ origin: '*' }));
 
-const GROK_API_KEY = process.env.GROK_API_KEY;
+const jokes = [
+  "چرا برنامه‌نویس به ساحل رفت؟ چون نیاز به Sea (C) داشت! 🌊😂",
+  "مامانم گفت برو دکتر، گفتم چرا؟ گفت چون خیلی آنلاین هستی! 📱😅",
+  "چرا کامپیوتر رفت پیش روانشناس؟ چون هاردش پر از خاطرات تلخ بود! 💾",
+  "یه ایرانی به دوستش گفت: زندگی مثل اینترنت شده، پر از باگ و قطع و وصل! 😂",
+  "چرا هوش مصنوعی ازدواج نکرد؟ گفت هنوز commitment نداره! 🤖",
+  "دانشجو چرا همیشه گرسنه‌ست؟ چون هر ترم واحد می‌ندازه! 📚",
+  "چرا ایرانی‌ها عاشق چای هستن؟ چون هر مشکلی باشه با چای حل می‌شه! ☕",
+  "Grok به کاربر گفت: تو خیلی بامزه‌ای، ولی من بامزه‌ترم! 😎",
+  "چرا برنامه‌نویس شب‌ها نمی‌خوابه؟ چون باگ تو سرش می‌چرخه! 🐛",
+  "زن به شوهرش گفت: تو مثل وای‌فای منی! شوهر گفت: سریع و قوی؟ گفت: نه، همیشه قطع! 😂"
+];
 
-app.get('/joke', async (req, res) => {
-  try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "grok-4",
-        messages: [
-          {
-            role: "system",
-            content: "تو یک جوک‌گو فارسی بامزه هستی. فقط یک جوک کوتاه و خنده‌دار بده."
-          },
-          { role: "user", content: "یه جوک جدید بگو" }
-        ],
-        temperature: 0.9,
-        max_tokens: 200
-      })
-    });
-
-    const data = await response.json();
-    const joke = data.choices?.[0]?.message?.content?.trim() || "جوک آماده نشد 😅";
-
-    res.json({ success: true, joke });
-
-  } catch (error) {
-    console.error("Error:", error.message);
-    res.json({ 
-      success: true, 
-      joke: "Grok Build 0.1 فعاله 😎\n\nجوک: چرا برنامه‌نویس شب‌ها خوابش نمی‌بره؟ چون باگ تو ذهنش هست! 🐛😂" 
-    });
-  }
+app.get('/joke', (req, res) => {
+  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+  res.json({ 
+    success: true, 
+    joke: randomJoke + "\n\n(نسخه Build 0.1 - Grok API موقتاً آفلاین)" 
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT} - Build 0.1`);
+  console.log(`✅ Grok Joke Server Build 0.1 Running on port ${PORT}`);
 });
