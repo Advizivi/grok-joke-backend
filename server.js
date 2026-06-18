@@ -23,26 +23,39 @@ app.get('/joke', async (req, res) => {
         'Authorization': `Bearer ${GROK_API_KEY}`
       },
       body: JSON.stringify({
-        model: "grok-4.3",
+        model: "grok-4.3",   // مدل مطمئن
         messages: [
           {
             role: "system",
-            content: "تو یک جوک‌گو فارسی خیلی بامزه و خلاق هستی. جوک کوتاه، خنده‌دار و مرتبط با زندگی ایرانی بگو. همیشه به فارسی جواب بده."
+            content: "تو یک جوک‌گو فارسی بامزه هستی. همیشه یک جوک کوتاه و خنده‌دار به فارسی بگو."
           },
-          { role: "user", content: "یه جوک جدید بگو" }
+          { 
+            role: "user", 
+            content: "یه جوک جدید بگو" 
+          }
         ],
-        temperature: 0.95,
-        max_tokens: 300
+        temperature: 0.9,
+        max_tokens: 250
       })
     });
 
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
     const data = await response.json();
-    const joke = data.choices?.[0]?.message?.content?.trim() || "جوک آماده نشد 😅";
+    
+    const joke = data.choices?.[0]?.message?.content?.trim() 
+                 || "جوک آماده نشد 😅 دوباره امتحان کن";
 
     res.json({ success: true, joke });
+
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, error: 'جوک آماده نشد 😅' });
+    console.error('Grok API Error:', error);
+    res.json({ 
+      success: true, 
+      joke: "Grok امروز خسته است 😅 یه جوک ساده: چرا کامپیوتر به دکتر رفت؟ چون ویروس گرفته بود! 😂" 
+    });
   }
 });
 
