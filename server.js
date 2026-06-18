@@ -19,33 +19,39 @@ app.get('/joke', async (req, res) => {
         'Authorization': `Bearer ${GROK_API_KEY}`
       },
       body: JSON.stringify({
-        model: "grok-beta",     // ← مدل مطمئن‌تر
+        model: "grok-3",           // ← مدل رایج فعلی
         messages: [
           {
             role: "system",
-            content: "تو یک جوک‌گو فارسی خیلی بامزه هستی. همیشه یک جوک کوتاه و خنده‌دار به فارسی بگو."
+            content: "تو یک جوک‌گو فارسی حرفه‌ای و بامزه هستی. جوک کوتاه، مدرن و خنده‌دار بگو. فقط یک جوک بده."
           },
           { role: "user", content: "یه جوک جدید بگو" }
         ],
-        temperature: 0.9,
+        temperature: 0.85,
         max_tokens: 200
       })
     });
 
-    const data = await response.json();
-
-    let joke = "جوک آماده نشد 😅";
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      joke = data.choices[0].message.content.trim();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', response.status, errorText);
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    res.json({ success: true, joke });
+    const data = await response.json();
+    const joke = data.choices?.[0]?.message?.content?.trim();
+
+    if (joke) {
+      res.json({ success: true, joke });
+    } else {
+      throw new Error("No joke in response");
+    }
 
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Full Error:', error);
     res.json({ 
       success: true, 
-      joke: "Grok امروز خیلی خسته‌ست 😅\n\nجوک جایگزین: چرا программиست‌ها همیشه سردشون می‌شه؟ چون همیشه نزدیک پنجره (Window) هستن! 😂" 
+      joke: "اتصال به Grok برقرار شد ولی جوک نیاورد 😅\n\nجوک دستی: چرا ایرانی‌ها عاشق چای هستن؟ چون هر مشکلی باشه با چای حل می‌شه! ☕😂" 
     });
   }
 });
