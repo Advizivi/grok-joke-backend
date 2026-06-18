@@ -5,10 +5,20 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS بهبود یافته
+app.use(cors({
+  origin: '*',           // برای تست همه جا اجازه بده
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
 const GROK_API_KEY = process.env.GROK_API_KEY;
+
+if (!GROK_API_KEY) {
+  console.error('❌ GROK_API_KEY تنظیم نشده است!');
+}
 
 app.get('/joke', async (req, res) => {
   try {
@@ -23,24 +33,25 @@ app.get('/joke', async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "تو یک جوک‌گو فارسی خیلی بامزه، خلاق و مدرن هستی. جوک‌های کوتاه، مرتبط با زندگی روزمره ایرانی بگو. همیشه به فارسی جواب بده."
+            content: "تو یک جوک‌گو فارسی خیلی بامزه و خلاق هستی. جوک کوتاه و خنده‌دار بگو. همیشه به فارسی."
           },
-          { role: "user", content: "یه جوک جدید و خنده‌دار بگو" }
+          { role: "user", content: "یه جوک جدید بگو" }
         ],
-        temperature: 0.95,
-        max_tokens: 400
+        temperature: 0.9,
+        max_tokens: 300
       })
     });
 
     const data = await response.json();
-    const joke = data.choices[0].message.content.trim();
+    const joke = data.choices?.[0]?.message?.content?.trim() || "جوک آماده نشد 😅";
+    
     res.json({ success: true, joke });
   } catch (error) {
-    console.error(error);
+    console.error('Error:', error);
     res.status(500).json({ success: false, error: 'خطا در دریافت جوک' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
