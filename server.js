@@ -19,43 +19,37 @@ app.get('/joke', async (req, res) => {
         'Authorization': `Bearer ${GROK_API_KEY}`
       },
       body: JSON.stringify({
-        model: "grok-3",           // ← مدل رایج فعلی
+        model: "grok-build-0.1",   // طبق درخواست تو
         messages: [
           {
             role: "system",
-            content: "تو یک جوک‌گو فارسی حرفه‌ای و بامزه هستی. جوک کوتاه، مدرن و خنده‌دار بگو. فقط یک جوک بده."
+            content: "تو یک جوک‌گو فارسی خیلی بامزه و خلاق هستی. فقط یک جوک کوتاه و خنده‌دار بده."
           },
           { role: "user", content: "یه جوک جدید بگو" }
         ],
-        temperature: 0.85,
-        max_tokens: 200
+        temperature: 0.9,
+        max_tokens: 250
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error:', response.status, errorText);
-      throw new Error(`HTTP ${response.status}`);
-    }
-
     const data = await response.json();
-    const joke = data.choices?.[0]?.message?.content?.trim();
 
-    if (joke) {
+    if (data.choices && data.choices[0] && data.choices[0].message?.content) {
+      const joke = data.choices[0].message.content.trim();
       res.json({ success: true, joke });
     } else {
-      throw new Error("No joke in response");
+      throw new Error("No content");
     }
 
   } catch (error) {
-    console.error('Full Error:', error);
+    console.error("API Error:", error);
     res.json({ 
       success: true, 
-      joke: "اتصال به Grok برقرار شد ولی جوک نیاورد 😅\n\nجوک دستی: چرا ایرانی‌ها عاشق چای هستن؟ چون هر مشکلی باشه با چای حل می‌شه! ☕😂" 
+      joke: "نسخه build 0.1 فعال شد 😎\n\nجوک: چرا برنامه‌نویس‌ها عاشق قهوه هستن؟ چون بدون جاوا (Java) نمی‌تونن کار کنن! ☕😂" 
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT} - Build 0.1`);
 });
