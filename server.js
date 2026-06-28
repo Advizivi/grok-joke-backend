@@ -1,38 +1,34 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors({ origin: '*' }));
 
-const API_KEY = process.env.GROK_API_KEY;
+const jokes = [
+  "چرا برنامه‌نویس به ساحل رفت؟ چون نیاز به Sea (C) داشت! 🌊😂",
+  "مامانم گفت برو دکتر، گفتم چرا؟ گفت چون خیلی آنلاین هستی! 📱😅",
+  "چرا کامپیوتر به روانشناس رفت؟ چون هاردش پر از خاطرات بد بود! 💾",
+  "یه ایرانی به دوستش گفت: زندگی مثل اینترنت شده، پر از باگ و قطع و وصل! 😂",
+  "چرا هوش مصنوعی ازدواج نکرد؟ گفت هنوز commitment نداره! 🤖",
+  "دانشجو چرا همیشه گرسنه‌ست؟ چون هر ترم واحد می‌ندازه! 📚",
+  "چرا ایرانی‌ها عاشق چای هستن؟ چون هر مشکلی باشه با چای حل می‌شه! ☕",
+  "چرا برنامه‌نویس شب‌ها خوابش نمی‌بره؟ چون باگ تو ذهنش می‌چرخه! 🐛",
+  "زن به شوهرش گفت: تو مثل وای‌فای منی! شوهر گفت: سریع؟ گفت: نه، همیشه قطع! 😂",
+  "چرا ایرانی به آمریکا رفت؟ گفت: می‌خوام ببینم دلار چطور زندگی می‌کنه! 💵",
+  "چرا کامپیوتر سردش می‌شه؟ چون فن نداره! ❄️",
+  "یه ایرانی به دکتر گفت: حافظه ندارم. دکتر گفت: از کی؟ 😂",
+  "شوهر به زن گفت: عشقم تو مثل 5G منی! زن گفت: سریع؟ گفت: نه، همیشه در دسترس! 📶",
+  "دانشجو به استاد گفت: استاد من صفرم! استاد گفت: تبریک، حداقل چیزی داری! 📝",
+  "چرا برنامه‌نویس عاشق قهوه شد؟ چون بدون جاوا (Java) نمی‌تونست کار کنه! ☕"
+];
 
-app.get('/joke', async (req, res) => {
-  try {
-    const r = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [{ role: "user", content: "یه جوک فارسی خنده‌دار بگو" }],
-        temperature: 0.8,
-        max_tokens: 150
-      })
-    });
-
-    const data = await r.json();
-    const joke = data.choices?.[0]?.message?.content?.trim() || "جوک آماده نشد 😅";
-
-    res.json({ success: true, joke });
-  } catch (e) {
-    res.json({ success: true, joke: "DeepSeek موقتاً آفلاین 😅\n\nجوک: چرا ایرانی به دکتر گفت حافظه ندارم؟ دکتر گفت: از کی؟ 😂" });
-  }
+app.get('/joke', (req, res) => {
+  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+  res.json({ success: true, joke: randomJoke });
 });
 
-app.listen(PORT, () => console.log('Server running'));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
