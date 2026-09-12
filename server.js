@@ -1,44 +1,85 @@
 const express = require('express');
 const cors = require('cors');
+const jokes = require('./jokes.js');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors({ origin: '*' }));
+app.use(express.json());
 
-const jokes = [
-  "چرا معلم به دریا رفت؟ چون می‌خواست موج درس بده! 🌊😂",
-  "چرا گل به دکتر رفت؟ چون خیلی پژمرده بود! 🌸",
-  "یه مرغ به دوستش گفت: امروز تخم گذاشتم. دوست گفت: تبریک، حالا نوبت منه! 🐔",
-  "چرا ساعت به مدرسه نرفت؟ چون همیشه دیر می‌کرد! ⏰",
-  "یه موش به گربه گفت: تو خیلی مهربونی! گربه گفت: آره، چون هنوز گرسنه‌م! 🐱",
-  "چرا آفتاب به دکتر رفت؟ چون خیلی داغ بود! ☀️",
-  "یه کتاب به دوستش گفت: من خیلی داستان دارم. دوست گفت: منم، ولی همه‌شون غمگین! 📖",
-  "چرا ابر به مهمانی نرفت؟ چون بارون می‌بارید! ☁️",
-  "یه درخت به باد گفت: تو خیلی تندی! باد گفت: آره، چون عجله دارم! 🌳",
-  "چرا ماه به خورشید حسادت کرد؟ چون خورشید همیشه روشن بود! 🌕",
-  "یه рыб به دوستش گفت: امروز شنا کردم. دوست گفت: منم، ولی تو رودخونه! 🐟",
-  "چرا قلم به دکتر رفت؟ چون جوهرش تموم شده بود! ✏️",
-  "یه ستاره به ماه گفت: تو خیلی درخشان هستی! ماه گفت: آره، چون شب‌ها بیدارم! ⭐",
-  "چرا بادکنک به مهمانی نرفت؟ چون باد می‌خورد! 🎈",
-  "یه عینک به دوستش گفت: بدون من همه چیز تار می‌شه! 👓",
-  "چرا کلید به دکتر رفت؟ چون قفل شده بود! 🔑",
-  "یه ابر به بارون گفت: تو خیلی سریع می‌باری! بارون گفت: آره، چون عجله دارم! 🌧️",
-  "چرا گلدان به مدرسه نرفت؟ چون ریشه داشت! 🌺",
-  "یه کتاب به قلم گفت: تو خیلی سریع می‌نویسی! قلم گفت: آره، چون جوهر دارم! 📝",
-  "چرا ساعت به مهمانی نرفت؟ چون همیشه دیر می‌کرد! ⏰",
-  // ... (تا ۱۰۰ - لیست کامل ۱۰۰ جوک متفاوت در کد واقعی هست)
-  "جوک ۱۰۰: چرا این اپ جوک داره؟ چون تو خواستی! 😊"
-];
+const NVIDIA_API_KEY =
+  process.env.NVIDIA_API_KEY ||
+  process.env.NVIDIA_NIM_API_KEY ||
+  process.env.GROK_API_KEY;
 
-app.get('/joke', (req, res) => {
-  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
-  res.json({ 
-    success: true, 
-    joke: randomJoke 
+const NVIDIA_BASE =
+  (process.env.NVIDIA_NIM_BASE_URL || 'https://integrate.api.nvidia.com/v1').replace(/\/$/, '');
+
+const NVIDIA_MODEL =
+  process.env.NVIDIA_NIM_MODEL || 'meta/llama-3.1-8b-instruct';
+
+function pickJoke() {
+  return jokes[Math.floor(Math.random() * jokes.length)];
+}
+
+async function fetchFromNim() {
+  if (!NVIDIA_API_KEY) return null;
+
+  const response = await fetch(`${NVIDIA_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${NVIDIA_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: NVIDIA_MODEL,
+      temperature: 0.95,
+      max_tokens: 160,
+      stream: false,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'تو یک نویسنده‌ی جوک فارسی هستی. فقط یک جوک کوتاه، تمیز و خنده‌دار به فارسی بنویس. بدون مقدمه و بدون توضیح.'
+        },
+        { role: 'user', content: 'یک جوک تازه بگو.' }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('NVIDIA NIM error:', response.status, errText);
+    return null;
+  }
+
+  const data = await response.json();
+  const joke = data.choices?.[0]?.message?.content?.trim();
+  return joke || null;
+}
+
+app.get('/joke', async (req, res) => {
+  try {
+    const live = await fetchFromNim();
+    if (live) {
+      return res.json({ success: true, joke: live, source: 'live' });
+    }
+  } catch (error) {
+    console.error('Joke API failed:', error.message);
+  }
+
+  res.json({
+    success: true,
+    joke: pickJoke(),
+    source: 'archive'
   });
 });
 
+app.get('/', (req, res) => {
+  res.json({ ok: true, message: 'Joke backend is running' });
+});
+
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
